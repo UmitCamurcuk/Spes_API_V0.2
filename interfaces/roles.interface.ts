@@ -1,4 +1,5 @@
 import { Document, Types } from 'mongoose';
+import { IHistory } from './history.interface';
 
 export interface IRoles extends Document {
     name: string;
@@ -7,6 +8,6 @@ export interface IRoles extends Document {
     users: string;
     is_active: boolean;
     created_user: string;
-    history: Types.ObjectId;
+    history: Types.ObjectId[] | IHistory[];
 }
     

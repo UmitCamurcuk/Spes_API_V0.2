@@ -1,23 +1,41 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+// authMiddleware.ts
+import { Request, Response, NextFunction } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
-export interface AuthRequest extends Request {
-  user?: any;
+export interface UserPayload extends JwtPayload {
+  id: string;
+  username: string;
+  // Diğer kullanıcı bilgileri ekleyebilirsiniz
 }
 
-export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
-  const token = req.header('Authorization');
+export interface AuthRequest extends Request {
+  user?: UserPayload; // `user` artık UserPayload türünde olacak
+}
+
+export const authenticateToken = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  // HTTP-Only cookie'den token alınır
+  const token = req.cookies?.token;
+
+  // Token kontrolü
   if (!token) {
     res.status(401).json({ message: 'Access Denied' });
-    return; // Fonksiyonu sonlandır
+    return ;
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-    req.user = decoded;
-    next(); // Devam etmek için `next` fonksiyonunu çağırmak önemli
+    // Token doğrulama
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as UserPayload;
+    req.user = decoded; // Kullanıcı bilgilerini req.user içine atıyoruz
+
+    // Middleware'den sonraki işleme devam
+    next();
   } catch (err) {
-    res.status(403).json({ message: 'Invalid Token' });
-    return; // Fonksiyonu sonlandır
+    // Hatalı token durumunda yanıt gönder
+   res.status(403).json({ message: 'Invalid Token' });
+   return ;
   }
 };
