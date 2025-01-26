@@ -35,3 +35,28 @@ export const createPermission = async (
     res.status(500).json({ message: "Permission kaydı sırasında bir hata oluştu", error });
   }
 };
+
+
+export const getPermissions = async (
+  req:AuthRequest,
+  res:Response
+): Promise <void> => {
+  try {
+    const permissions = await PermissionModel.find()
+    .populate("permissions")
+    .exec()
+    if (!permissions || permissions.length === 0) {
+      console.info("No permissions found in the database.");
+      res.status(404).json({ message: "permissions bulunamadı" });
+      return;
+    }
+    console.info(`Fetched ${permissions.length} users from the database.`);
+    res.status(200).json(permissions);
+  } catch (error: any) {
+    console.error("An error occurred while fetching permissions:", error);
+    res.status(500).json({
+      message: "Sunucu hatası, permissions getirilemedi",
+      error: error.message,
+    });
+  }
+}

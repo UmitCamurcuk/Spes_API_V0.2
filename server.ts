@@ -8,6 +8,7 @@ import userRouter from './routes/systemUserRoutes';
 import authRouter from './routes/authRoutes';
 import permissionRouter from './routes/permissionRoutes';
 import permissionGroupRouter from './routes/permissionGroupRoutes';
+import historyRouter from './routes/historyRoutes';
 
 
 const port = process.env.PORT;
@@ -37,5 +38,5 @@ app.use('/api/users/',userRouter);
 app.use('/api/auth/', authRouter);
 app.use('/api/permission/', permissionRouter);
 app.use('/api/permissionGroup/', permissionGroupRouter);
-
+app.use('/api/history/', historyRouter);
 export default app;

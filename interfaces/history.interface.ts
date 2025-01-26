@@ -1,7 +1,7 @@
 import { Document, Types } from 'mongoose';
 
 export interface IHistory extends Document {
-    entityID: number;
+    entityID: Types.ObjectId;
     entityType: string;
     action: string;
     comment?: string; // Opsiyonel alan

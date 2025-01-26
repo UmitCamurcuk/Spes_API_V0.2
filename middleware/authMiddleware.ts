@@ -1,11 +1,11 @@
 // authMiddleware.ts
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import {  Types } from "mongoose";
 
 export interface UserPayload extends JwtPayload {
-  id: string;
+  id: Types.ObjectId;
   username: string;
-  // Diğer kullanıcı bilgileri ekleyebilirsiniz
 }
 
 export interface AuthRequest extends Request {

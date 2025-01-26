@@ -4,7 +4,7 @@ import { authenticateToken } from "../middleware/authMiddleware";
 
 const userRouter = Router();
 
-userRouter.post('/register', registerUser);
+userRouter.post('/register', authenticateToken, registerUser);
 userRouter.put('/updateUser/:id', authenticateToken, editSystemUser);
 userRouter.get('/getUsers', authenticateToken, getUsers);
 userRouter.post('/getUser', authenticateToken, getUser);

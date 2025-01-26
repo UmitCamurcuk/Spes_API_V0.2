@@ -1,12 +1,14 @@
 import { Response, Request } from "express";
 import bcrypt from "bcrypt";
 import SystemUser from "../models/systemUserModel";
-import History from "../models/historyModel";
+import { AuthRequest } from "../middleware/authMiddleware";
+import { createHistoryEntry } from "./HistoryController";
+import { Types } from "mongoose";
 const saltRounds = 10;
 
 //USER REGISTER
 export const registerUser = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   const {
@@ -31,6 +33,22 @@ export const registerUser = async (
       is_active: true,
     });
     const savedUser = await newUser.save();
+
+    try {
+      await createHistoryEntry({
+        entityID: savedUser!._id as Types.ObjectId,
+        entityType: "SystemUser",
+        action: "create",
+        status: "created",
+        changedValues: savedUser,
+        ipAddress: req.ip,
+        createdUser: req.user!.id,
+        timestamp: new Date(),
+      });
+    } catch (historyError) {
+      console.error("History entry creation error:", historyError);
+    }
+
     res
       .status(200)
       .json({ message: "Kullanıcı başarıyla kaydedildi", user: savedUser });
@@ -54,12 +72,10 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
     res.status(200).json(users);
   } catch (error: any) {
     console.error("An error occurred while fetching users:", error);
-    res
-      .status(500)
-      .json({
-        message: "Sunucu hatası, kullanıcılar getirilemedi",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Sunucu hatası, kullanıcılar getirilemedi",
+      error: error.message,
+    });
   }
 };
 
@@ -94,12 +110,10 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
   } catch (error: any) {
     if (error instanceof Error) {
       console.error("Error fetching user:", error.message);
-      res
-        .status(500)
-        .json({
-          message: "Sunucu hatası, kullanıcı getirilemedi",
-          error: error.message,
-        });
+      res.status(500).json({
+        message: "Sunucu hatası, kullanıcı getirilemedi",
+        error: error.message,
+      });
     } else {
       console.error("An unknown error occurred:", error);
       res.status(500).json({ message: "Bilinmeyen bir hata oluştu" });
@@ -109,11 +123,13 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
 
 //EDIT USER
 export const editSystemUser = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   const userId = req.params.id;
   const updatedData = req.body;
+  const saltRounds = 10;
+
   try {
     const existingUser = await SystemUser.findById(userId);
 
@@ -122,30 +138,52 @@ export const editSystemUser = async (
       return;
     }
 
+    // Şifre değişikliği için kontrol
+    if (updatedData.password) {
+      updatedData.password = await bcrypt.hash(
+        updatedData.password,
+        saltRounds
+      );
+    }
+
+    // Değişen değerleri belirleme
+    const changedValues: Record<string, any> = {};
+    Object.keys(updatedData).forEach((key) => {
+      if ((existingUser as any)[key] !== updatedData[key]) {
+        changedValues[key] = {
+          old: (existingUser as any)[key],
+          new: updatedData[key],
+        };
+      }
+    });
+
+    // Eğer değişiklik yoksa işlem yapmadan çık
+    if (Object.keys(changedValues).length === 0) {
+      res.status(200).json({ message: "No changes detected" });
+      return;
+    }
+
+    // Kullanıcı güncellemesi
     const updatedUser = await SystemUser.findByIdAndUpdate(
       userId,
       updatedData,
       { new: true }
     );
 
-    await History.create({
-      entityID: 1,
+    // Tarihçeye kayıt
+    await createHistoryEntry({
+      entityID: existingUser!._id as Types.ObjectId,
       entityType: "SystemUser",
       action: "edit",
-      changedValues: {
-        oldData: existingUser,
-        newData: updatedUser,
-      },
+      changedValues,
       status: "updated",
       ipAddress: req.ip,
-      createdUser: userId,
+      createdUser: req.user!.id,
       timestamp: new Date(),
     });
 
     res.status(200).json(updatedUser);
-    return;
   } catch (error) {
     res.status(500).json({ message: "An error occurred", error });
-    return;
   }
 };
