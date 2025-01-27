@@ -10,5 +10,7 @@ export interface IHistory extends Document {
     timestamp: Date;
     ipAddress?: string; // Opsiyonel alan
     status: string;
+    createdAt?:Date,
+    updatedAt?:Date
   }
   

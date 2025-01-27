@@ -7,7 +7,8 @@ export interface ISystemUser extends Document {
     username: string;
     password: string;
     email: string;
-    roles: Types.ObjectId;
+    roles: Types.ObjectId[];
     is_active: boolean;
-    history: Types.ObjectId;
+    createdAt?:Date,
+    updatedAt?:Date
 }

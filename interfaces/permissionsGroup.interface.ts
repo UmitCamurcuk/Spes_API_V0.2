@@ -1,5 +1,4 @@
 import { Document, Types } from 'mongoose';
-import { IHistory } from './history.interface';
 
 export interface IPermissionGroup extends Document {
   name: string;
@@ -8,5 +7,6 @@ export interface IPermissionGroup extends Document {
   permissions: Types.ObjectId[] ;
   isActive: boolean; 
   createdUser: Types.ObjectId; 
-  history: Types.ObjectId[] | IHistory[]; 
+  createdAt?:Date,
+  updatedAt?:Date
 }

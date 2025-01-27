@@ -2,8 +2,8 @@ import { Response, Request } from "express";
 import bcrypt from "bcrypt";
 import SystemUser from "../models/systemUserModel";
 import { AuthRequest } from "../middleware/authMiddleware";
-import { createHistoryEntry } from "./HistoryController";
 import { Types } from "mongoose";
+import { createHistoryEntry } from "../utils/history";
 const saltRounds = 10;
 
 //USER REGISTER

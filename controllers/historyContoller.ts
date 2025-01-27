@@ -2,16 +2,7 @@ import { IHistory } from "../interfaces/history.interface";
 import History from "../models/historyModel";
 import { Response, Request } from "express";
 
-export const createHistoryEntry = async (entry: Partial<IHistory>): Promise<void> => {
-    try {
-      await History.create(entry);
-    } catch (error) {
-      console.error("Failed to create history entry:", error);
-      throw new Error("Failed to create history entry");
-    }
-  };
-
-  export const getHistory = async (req: Request, res: Response): Promise<void> => {
+export const getHistory = async (req: Request, res: Response): Promise<void> => {
     try {
 
       const { entityID, entityType, action, createdUser, } = req.body;

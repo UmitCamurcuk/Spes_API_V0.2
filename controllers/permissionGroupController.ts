@@ -53,23 +53,28 @@ export const createPermissionGroup = async (
 
 
 export const getPermissionGroups = async (
-  req:AuthRequest,
-  res:Response
-): Promise <void> => {
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
-    const permissionGroups = await PermissionGroupModel.find();
+    const permissionGroups = await PermissionGroupModel.find()
+      .populate("permissions") // Permission alanını doldur
+      .exec();
     if (!permissionGroups || permissionGroups.length === 0) {
       console.info("No permissionGroups found in the database.");
-      res.status(404).json({ message: "permissionGroups bulunamadı" });
+      res.status(404).json({ message: "Permission groups bulunamadı." });
       return;
     }
-    console.info(`Fetched ${permissionGroups.length} users from the database.`);
+
+    console.info(
+      `Fetched ${permissionGroups.length} permission groups from the database.`
+    );
     res.status(200).json(permissionGroups);
   } catch (error: any) {
-    console.error("An error occurred while fetching permissionGroups:", error);
+    console.error("An error occurred while fetching permission groups:", error);
     res.status(500).json({
-      message: "Sunucu hatası, permissionGroups getirilemedi",
+      message: "Sunucu hatası, permission groups getirilemedi.",
       error: error.message,
     });
   }
-}
+};

@@ -2,6 +2,8 @@
 import { Response } from "express";
 import { PermissionModel } from "../models/permissionModel";
 import { AuthRequest } from "../middleware/authMiddleware";
+import { Types } from "mongoose";
+import { createHistoryEntry } from "../utils/history";
 
 export const createPermission = async (
   req: AuthRequest,  
@@ -27,9 +29,33 @@ export const createPermission = async (
     });
 
     const savedPermission = await newPermission.save();
+    
+    const { _id, createdAt, updatedAt, ...changedValues } = savedPermission.toObject();
+    try {
+      await createHistoryEntry({
+        entityID: savedPermission!._id as Types.ObjectId,
+        entityType: "Permission",
+        action: "create",
+        status: "created",
+        changedValues,
+        ipAddress: req.ip,
+        createdUser: req.user!.id,
+        timestamp: new Date(),
+      });
+    } catch (historyError) {
+      console.error("History entry creation error:", historyError);
+    }
+
     res.status(200).json({
       message: "Permission başarıyla kaydedildi", 
-      user: savedPermission
+      permission: {
+        id: savedPermission._id,
+        name: savedPermission.name,
+        code: savedPermission.code,
+        group: savedPermission.group,
+        is_active: savedPermission.isActive,
+        createdAt: savedPermission.createdAt,
+      },
     });
   } catch (error) {
     res.status(500).json({ message: "Permission kaydı sırasında bir hata oluştu", error });
@@ -43,7 +69,7 @@ export const getPermissions = async (
 ): Promise <void> => {
   try {
     const permissions = await PermissionModel.find()
-    .populate("permissions")
+    .populate("group")
     .exec()
     if (!permissions || permissions.length === 0) {
       console.info("No permissions found in the database.");
